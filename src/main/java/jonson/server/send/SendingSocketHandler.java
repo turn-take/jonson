@@ -1,11 +1,14 @@
 package jonson.server.send;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jonson.io.InputStreamParser;
+import jonson.json.MessageMapper;
 import jonson.message.Message;
 import jonson.queue.MessageQueue;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 /**
  * 送信側のソケットハンドリングクラス
@@ -20,19 +23,24 @@ class SendingSocketHandler implements Runnable{
     }
 
     public void run() {
-        try (DataOutputStream ds = new DataOutputStream(socket.getOutputStream())){
+        try (final DataOutputStream dos = new DataOutputStream(socket.getOutputStream())){
+
+            String topicName = InputStreamParser.parseInputStreamToString(socket.getInputStream());
+
+            System.out.println("topic : " + topicName);
 
             // キューからメッセージ取り出し
-            Message message = MessageQueue.poll();
+            Message message = MessageQueue.poll(topicName).get();
 
             // JSON形式に変換
-            ObjectMapper objectMapper = new ObjectMapper();
-            String output = objectMapper.writeValueAsString(message);
+            String output = MessageMapper.toJson(message);
+
+            System.out.println(output);
 
             // JSON返却
-            ds.writeUTF(output);
-            ds.flush();
-        } catch (IOException e) {
+            dos.writeUTF(output);
+            dos.flush();
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             try {

@@ -25,7 +25,9 @@ class ReceivingSocketHandler implements Runnable{
             // Messageオブジェクトに変換
             Message message = (Message) os.readObject();
 
+            System.out.println(message);
 
+            // メッセージをハンドリングする
             handleMessage(message);
 
         } catch (IOException | ClassNotFoundException e) {
@@ -54,6 +56,6 @@ class ReceivingSocketHandler implements Runnable{
         System.out.println(message);
 
         // キューに追加
-        MessageQueue.offer(message);
+        MessageQueue.offer(message.getTopicName(), message);
     }
 }

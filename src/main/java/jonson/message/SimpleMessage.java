@@ -1,17 +1,15 @@
 package jonson.message;
 
-import jonson.queue.MessageQueue;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.io.Serializable;
 
 /**
  * 単純なメッセージ
  */
-public class SimpleMessage implements Message, Serializable {
+public class SimpleMessage extends Message{
 
-    public SimpleMessage(String message) {
+    public SimpleMessage(String topicName, String message) {
+        super(topicName);
         this.message = message;
     }
 
