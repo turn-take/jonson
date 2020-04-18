@@ -1,5 +1,8 @@
 package jonson.server.send;
 
+import jonson.Main;
+import jonson.PropertiesUtil;
+
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
@@ -10,13 +13,16 @@ import java.util.concurrent.Executors;
  */
 public class SendingServer implements Runnable{
 
-    public static final int PORT = 10001; //待ち受けポート番号
+    public final int PORT;
+    public final int THREAD_NUMBER;
 
     public final ExecutorService service;
 
     public SendingServer() {
         System.out.println("Start the sending server.");
-        this.service = Executors.newFixedThreadPool(10);
+        PORT = PropertiesUtil.getInstance().getPropertyIntValue("SendingPort", 10001);
+        THREAD_NUMBER = PropertiesUtil.getInstance().getPropertyIntValue("SendingServerThreadNumber", 10);
+        service = Executors.newFixedThreadPool(THREAD_NUMBER);
     }
 
     @Override
@@ -35,6 +41,7 @@ public class SendingServer implements Runnable{
             System.out.println("Terminate the sending server.");
             service.shutdown();
             System.out.println("Sending server has been terminated.");
+            Main.countDownLatch.countDown();
         }
     }
 }

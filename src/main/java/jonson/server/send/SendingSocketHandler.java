@@ -1,6 +1,5 @@
 package jonson.server.send;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jonson.io.InputStreamParser;
 import jonson.json.MessageMapper;
 import jonson.message.Message;
@@ -8,7 +7,6 @@ import jonson.queue.MessageQueue;
 
 import java.io.*;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 
 /**
  * 送信側のソケットハンドリングクラス
