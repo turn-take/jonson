@@ -13,16 +13,19 @@ import java.util.concurrent.Executors;
  */
 public class SendingServer implements Runnable{
 
-    public final int PORT;
-    public final int THREAD_NUMBER;
+    private final int PORT;
+    private final int THREAD_NUMBER;
+
+    private final Sender sender;
 
     public final ExecutorService service;
 
-    public SendingServer() {
+    public SendingServer(Sender sender) {
         System.out.println("Start the sending server.");
         PORT = PropertiesUtil.getInstance().getPropertyIntValue("SendingPort", 10001);
         THREAD_NUMBER = PropertiesUtil.getInstance().getPropertyIntValue("SendingServerThreadNumber", 10);
         service = Executors.newFixedThreadPool(THREAD_NUMBER);
+        this.sender = sender;
     }
 
     @Override
@@ -33,7 +36,7 @@ public class SendingServer implements Runnable{
                 // 接続を待ち受け続ける
                 Socket socket = sc.accept();
                 // 接続が合った場合はスレッド切り出し
-                service.execute(new SendingSocketHandler(socket));
+                service.execute(new SendingServerThread(socket, sender));
             }
         } catch (Exception e) {
             e.printStackTrace();

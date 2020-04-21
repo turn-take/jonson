@@ -6,10 +6,10 @@ import lombok.Setter;
 /**
  * 単純なメッセージ
  */
-public class SimpleMessage extends Message{
+public class SimpleOnLoginMessage extends OnLoginMessage {
 
-    public SimpleMessage(String topicName, String message) {
-        super(topicName);
+    public SimpleOnLoginMessage(String topicName, long sessionId, String message) {
+        super(topicName,sessionId);
         this.message = message;
     }
 

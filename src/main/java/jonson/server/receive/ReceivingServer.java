@@ -33,7 +33,7 @@ public class ReceivingServer implements Runnable{
                 // 接続を待ち受け続ける
                 Socket socket = sc.accept();
                 // 接続が合った場合はスレッド切り出し
-                service.execute(new ReceivingSocketHandler(socket));
+                service.execute(new ReceivingServerThread(socket));
             }
         } catch (Exception e) {
             System.out.println("Problem has occurred in receiving server.");

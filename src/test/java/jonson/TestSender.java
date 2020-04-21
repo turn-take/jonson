@@ -1,13 +1,13 @@
 package jonson;
 
-import jonson.message.Message;
-import jonson.message.SimpleMessage;
+import jonson.message.LoginMessage;
+import jonson.message.SimpleOnLoginMessage;
 
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.net.Socket;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.net.UnknownHostException;
 
 /**
  * テスト用の送信クラス
@@ -15,25 +15,48 @@ import java.util.concurrent.Executors;
  */
 public class TestSender {
     public static void main(String[] args) throws InterruptedException {
-//        ExecutorService service = Executors.newCachedThreadPool();
-//        while(true) {
-//            service.execute(new TestClient());
-//            Thread.sleep(500);
-//        }
-        Thread t = new Thread(new TestClient());
-        t.start();
+        try{
+            TestSender testSender = new TestSender();
+            long sessionId = testSender.login();
+            testSender.send(sessionId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
-    static class TestClient implements Runnable{
-        public void run() {
+    /**
+     * ログインを実行し、セッションIDを返す
+     * @return
+     * @throws Exception
+     */
+    public long login() throws Exception{
 
-            try (Socket s = new Socket("localhost", 10000);
-                 ObjectOutputStream os = new ObjectOutputStream(s.getOutputStream())) {
-                os.writeObject(new SimpleMessage("test",Thread.currentThread().getName()));
-                os.flush();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        try (Socket s = new Socket("localhost", 10000);
+             ObjectOutputStream os = new ObjectOutputStream(s.getOutputStream());
+             DataInputStream dis = new DataInputStream(s.getInputStream())) {
+            os.writeObject(new LoginMessage());
+            os.flush();
+
+            long sessionId = dis.readLong();
+
+            return sessionId;
+
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    public void send(long sessionId) {
+        try(Socket socket = new Socket("localhost", 10000);
+            ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream())
+        ) {
+            os.writeObject(new SimpleOnLoginMessage("test", sessionId, "This is a test."));
+            os.flush();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

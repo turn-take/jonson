@@ -22,7 +22,7 @@ public class PropertiesUtil {
         return instance;
     }
 
-    public void load() {
+    public void load() throws IOException{
         try (InputStream is = getClass().getResourceAsStream(FILE_NAME);
              BufferedReader br = new BufferedReader(new InputStreamReader(is))){
             properties.load(br);
@@ -30,6 +30,7 @@ public class PropertiesUtil {
             // ファイル読み込みに失敗
             e.printStackTrace();
             System.out.println(String.format("ファイルの読み込みに失敗しました。ファイル名:%s", FILE_NAME));
+
         }
     }
 

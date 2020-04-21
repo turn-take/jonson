@@ -1,39 +1,64 @@
 package jonson.queue;
 
 import jonson.message.Message;
+import jonson.message.OnLoginMessage;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * アプリケーション内共通で利用するキュー
+ * メッセージをキャッシュするキュー
+ * 外部的にはキューとして利用できるが内部的にはMap
  */
 public class MessageQueue {
-    private static final Map<String, Queue<Message>> topicNameMap = new ConcurrentHashMap<>();
+    private static final MessageQueue instance = new MessageQueue();
+
+    public static MessageQueue getInstance() {
+        return instance;
+    }
+
+    // トピック毎にキューを保管するMap
+    private final Map<String, TopicQueue> map;
+
+    // シングルトン
+    private MessageQueue() {
+        this.map  = new ConcurrentHashMap<>();
+    }
 
     /**
-     * トピック名を指定してキューに追加する。
-     * @param message
+     * キューに追加する。
      */
-    public static void offer(String topicName, Message message) {
-        if(!topicNameMap.containsKey(topicName)) {
-            Queue<Message> queue = new ConcurrentLinkedQueue<>();
-            topicNameMap.put(topicName, queue);
+    public void offer(OnLoginMessage message) {
+
+        String topicName = message.getTopicName();
+
+        // キューが存在しない場合は生成してmapに追加
+        if(!map.containsKey(topicName)) {
+            TopicQueue topicQueue = new TopicQueue(topicName);
+            map.put(topicName, topicQueue);
         }
-        Queue<Message> queue = topicNameMap.get(topicName);
-        queue.offer(message);
+
+        map.get(topicName).offer(message);
+
     }
 
     /**
      * トピック名を指定してキューから要素を取り出す。(FIFO)
      * @return Optional<Message>
      */
-    public static Optional<Message> poll(String topicName) {
-        Queue<Message> queue = topicNameMap.get(topicName);
-        Optional<Message> message = Optional.of(queue.poll());
+    public Optional<Message> poll(String topicName) {
+        TopicQueue queue = map.get(topicName);
+        Optional<Message> message = queue.poll();
         return message;
     }
+
+    /**
+     * 保管している全てのキューを取得する。
+     * @return Map<String , TopicQueue> キューのマップ
+     */
+    public Map<String , TopicQueue> get() {
+        return map;
+    }
+
 }

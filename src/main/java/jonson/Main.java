@@ -1,6 +1,7 @@
 package jonson;
 
 import jonson.server.receive.ReceivingServer;
+import jonson.server.send.Sender;
 import jonson.server.send.SendingServer;
 
 import java.util.concurrent.CountDownLatch;
@@ -24,9 +25,19 @@ public class Main {
             // 設定ファイル読み込み
             PropertiesUtil.getInstance().load();
 
+            // 受信側サーバー起動
             launchReceivingServer();
 
-            launchSendingServer();
+            // メッセージ送信インスタンス生成
+            Sender sender = new Sender();
+
+            // 送信側サーバー起動
+            launchSendingServer(sender);
+
+            // 非同期タスクの実行
+            AsyncTask task = new AsyncTask(sender);
+            Thread thread = new Thread(task);
+            thread.start();
 
             System.out.println("Application has been launched.");
 
@@ -45,7 +56,7 @@ public class Main {
     /**
      * 受信側サーバーの起動を行う。
      */
-    public static void launchReceivingServer() {
+    private static void launchReceivingServer() {
         ReceivingServer receivingServer = new ReceivingServer();
         receivingService.execute(receivingServer);
     }
@@ -53,8 +64,8 @@ public class Main {
     /**
      * 送信側サーバーの起動を行う。
      */
-    public static void launchSendingServer() {
-        SendingServer sendingServer = new SendingServer();
+    private static void launchSendingServer(Sender sender) {
+        SendingServer sendingServer = new SendingServer(sender);
         sendingService.execute(sendingServer);
     }
 }
