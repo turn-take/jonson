@@ -1,5 +1,7 @@
 package jonson;
 
+import jonson.log.JonsonLog;
+
 import java.io.*;
 import java.util.Properties;
 
@@ -28,9 +30,7 @@ public class PropertiesUtil {
             properties.load(br);
         } catch (IOException e) {
             // ファイル読み込みに失敗
-            e.printStackTrace();
-            System.out.println(String.format("ファイルの読み込みに失敗しました。ファイル名:%s", FILE_NAME));
-
+            JonsonLog.error(String.format("Failed to load the file. File name:%s", FILE_NAME), e);
         }
     }
 

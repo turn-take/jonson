@@ -12,6 +12,6 @@ public class InputStreamParserTest {
     public void InputStreamから文字列への変換が出来る() throws IOException {
         String expected = "Hallo World!";
         InputStream inputStream = new ByteArrayInputStream(expected.getBytes(StandardCharsets.UTF_8));
-        assertEquals(expected, InputStreamParser.parseInputStreamToString(inputStream));
+        assertEquals(expected, InputStreamParser.parseToString(inputStream));
     }
 }

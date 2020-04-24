@@ -2,51 +2,50 @@ package jonson.server.receive;
 
 import jonson.actions.Action;
 import jonson.actions.ActionFactory;
+import jonson.log.ReceivingLog;
 import jonson.message.Message;
+import jonson.net.SocketHandler;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.net.Socket;
 
 /**
  * 受信側サーバーで動くスレッドクラス
+ * アクションを同期実行するのでスレッドの待ち合わせは発生しない。
  */
 class ReceivingServerThread implements Runnable{
-    private final Socket socket;
 
-    ReceivingServerThread(Socket socket) {
-        this.socket = socket;
-        System.out.println("connected : "
-                + socket.getRemoteSocketAddress());
+    private final SocketHandler socketHandler;
+
+    ReceivingServerThread(SocketHandler socketHandler) {
+        this.socketHandler = socketHandler;
+        ReceivingLog.info("connected : "
+                + socketHandler.getRemoteSocketAddress());
     }
 
     public void run() {
-        try (ObjectInputStream ois = new ObjectInputStream(socket.getInputStream())){
+        try {
 
-            // 入力をMessageオブジェクトにパース(失敗したら例外発生)
-            Message message = (Message) ois.readObject();
+            // メッセージ取得
+            Message message = socketHandler.acceptMessage();
 
             // アクション生成
             Action action = ActionFactory.newAction(message);
 
             // アクション実行
-            action.execute(socket);
+            action.execute(socketHandler);
 
-        } catch (IOException | ClassNotFoundException e) {
-            System.out.println("Problem has occurred in SocketHandler.");
-            e.printStackTrace();
         } catch (Exception e) {
-            e.printStackTrace();
+            ReceivingLog.error("Error has occurred!", e);
         } finally {
             try {
-                if (socket != null) {
-                    socket.close();
+                if (!socketHandler.isSocketClosed()) {
+                    socketHandler.close();
                 }
             } catch (IOException e) {
                 // nothing to do
             }
-            System.out.println("disconnected : "
-                    + socket.getRemoteSocketAddress());
+            ReceivingLog.info("disconnected : "
+                    + socketHandler.getRemoteSocketAddress());
         }
     }
 

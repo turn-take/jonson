@@ -2,6 +2,8 @@ package jonson.server.send;
 
 import jonson.Main;
 import jonson.PropertiesUtil;
+import jonson.log.SendingLog;
+import jonson.net.SocketHandler;
 
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -21,7 +23,7 @@ public class SendingServer implements Runnable{
     public final ExecutorService service;
 
     public SendingServer(Sender sender) {
-        System.out.println("Start the sending server.");
+        SendingLog.info("Start the sending server.");
         PORT = PropertiesUtil.getInstance().getPropertyIntValue("SendingPort", 10001);
         THREAD_NUMBER = PropertiesUtil.getInstance().getPropertyIntValue("SendingServerThreadNumber", 10);
         service = Executors.newFixedThreadPool(THREAD_NUMBER);
@@ -30,20 +32,23 @@ public class SendingServer implements Runnable{
 
     @Override
     public void run() {
-        System.out.println("Sending server has been started");
+        SendingLog.info("Sending server has been started");
         try (ServerSocket sc = new ServerSocket(PORT)){
             while (true) {
+
                 // 接続を待ち受け続ける
                 Socket socket = sc.accept();
+
                 // 接続が合った場合はスレッド切り出し
-                service.execute(new SendingServerThread(socket, sender));
+                SocketHandler socketHandler = new SocketHandler(socket);
+                service.execute(new SendingServerThread(socketHandler, sender));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            SendingLog.error("Problem has occurred in sending server.", e);
         } finally {
-            System.out.println("Terminate the sending server.");
+            SendingLog.info("Terminate the sending server.");
             service.shutdown();
-            System.out.println("Sending server has been terminated.");
+            SendingLog.info("Sending server has been terminated.");
             Main.countDownLatch.countDown();
         }
     }

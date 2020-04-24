@@ -11,7 +11,7 @@ public class InputStreamParser {
      * @return 文字列
      * @throws IOException
      */
-    public static String parseInputStreamToString(InputStream is) throws IOException {
+    public static String parseToString(InputStream is) throws IOException {
         // 入力をバイト配列に格納
         byte[] bytes = new byte[1024];
         is.read(bytes);

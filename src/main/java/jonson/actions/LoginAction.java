@@ -1,18 +1,18 @@
 package jonson.actions;
 
 import jonson.message.LoginMessage;
+import jonson.net.SocketHandler;
 import jonson.session.Session;
 import jonson.session.SessionManager;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Socket;
 
 /**
  * ログイン時のアクション
  * セッションを作成してセッションIDをクライアントに通知する
+ * エラー発生時とかセッションがすでにある場合とかは面倒なのでスルーしておく
  */
-public class LoginAction implements Action{
+public class LoginAction extends Action{
 
     private final LoginMessage loginMessage;
 
@@ -20,24 +20,16 @@ public class LoginAction implements Action{
         this.loginMessage = loginMessage;
     }
 
-    public void execute(Socket socket) throws Exception{
+    @Override
+    public void executeSub(SocketHandler socketHandler) throws Exception{
 
         // セッションの生成
-        Session session = SessionManager.createSession(socket, loginMessage);
+        Session session = SessionManager.createSession(socketHandler, loginMessage);
 
         long sessionId = session.getSessionID();
 
-        try (DataOutputStream dos = new DataOutputStream(socket.getOutputStream())){
-
-            dos.writeLong(sessionId);
-            dos.flush();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw e;
-        } finally {
-            socket.close();
-        }
+        // セッションIDの送信
+        socketHandler.send(sessionId);
 
     }
 }

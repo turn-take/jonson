@@ -19,6 +19,11 @@ public class MessageMapper {
      * @throws IOException
      */
     public static String toJson(Message message) throws IOException {
-        return mapper.writeValueAsString(message);
+        try {
+            return mapper.writeValueAsString(message);
+        }catch (IOException e) {
+            throw new IOException("Failed to convert to Json.");
+        }
+
     }
 }

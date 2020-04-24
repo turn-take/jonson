@@ -1,6 +1,8 @@
 package jonson.session;
 
+import jonson.log.JonsonLog;
 import jonson.message.Message;
+import jonson.net.SocketHandler;
 
 import java.net.Socket;
 import java.util.Map;
@@ -17,16 +19,17 @@ public class SessionManager {
 
     /**
      * セッションを生成する
-     * @param socket
+     * @param socketHandler
      * @param message
      * @return
      */
-    public static Session createSession(Socket socket, Message message) {
-        long sessionId = 31 * socket.hashCode();
+    public static Session createSession(SocketHandler socketHandler, Message message) {
+        // セッションIDの生成は適当
+        long sessionId = 31 * socketHandler.hashCode();
         sessionId *= message.hashCode();
         Session session = new Session(sessionId);
 
-        System.out.println("New Session created. sessionID = " + sessionId);
+        JonsonLog.info("New Session created. sessionID = " + sessionId);
 
         sessionMap.put(sessionId, session);
 

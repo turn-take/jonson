@@ -1,5 +1,8 @@
 package jonson;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonLocation;
+import jonson.log.JonsonLog;
 import jonson.server.receive.ReceivingServer;
 import jonson.server.send.Sender;
 import jonson.server.send.SendingServer;
@@ -20,7 +23,7 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            System.out.println("Launch the application.");
+            JonsonLog.info("Launch the application.");
 
             // 設定ファイル読み込み
             PropertiesUtil.getInstance().load();
@@ -39,17 +42,17 @@ public class Main {
             Thread thread = new Thread(task);
             thread.start();
 
-            System.out.println("Application has been launched.");
+            JonsonLog.info("Application has been launched.");
 
             // カウントダウンが0になったらアプリケーション終了
             countDownLatch.await();
         } catch (Exception e) {
-            e.printStackTrace();
+            JonsonLog.error("Error has occurred in application.", e);
         } finally {
-            System.out.println("Exit the application.");
+            JonsonLog.info("Exit the application.");
             receivingService.shutdown();
             sendingService.shutdown();
-            System.out.println("See you.");
+            JonsonLog.info("See you.");
         }
     }
 

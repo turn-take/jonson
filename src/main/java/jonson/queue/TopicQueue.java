@@ -38,7 +38,7 @@ public class TopicQueue {
      * キューから要素をポップする。
      * @return optional<Message> nullかもしれないOptional
      */
-    public synchronized Optional<Message> poll() {
+    public Optional<Message> poll() {
         return Optional.ofNullable(queue.poll());
     }
 

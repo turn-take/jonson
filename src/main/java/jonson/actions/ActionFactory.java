@@ -8,15 +8,12 @@ import jonson.queue.MessageQueue;
 import java.io.IOException;
 
 /**
- * アクションを生成する簡易的なクラス
+ * アクションを生成する簡易的なファクトリクラス
  */
 public class ActionFactory {
 
     // インスタンス化禁止
     private ActionFactory(){}
-
-    // Actionに注入するMessageQueueオブジェクト
-    private static final MessageQueue messageQueue = MessageQueue.getInstance();
 
     /**
      * MessageからAction生成
@@ -29,7 +26,7 @@ public class ActionFactory {
         if(message instanceof LoginMessage) {
             action = new LoginAction((LoginMessage) message);
         }else if(message instanceof OnLoginMessage) {
-            action = new MessageAction((OnLoginMessage) message, messageQueue);
+            action = new MessageAction((OnLoginMessage) message);
         }
 
         return action;

@@ -2,6 +2,8 @@ package jonson.server.receive;
 
 import jonson.Main;
 import jonson.PropertiesUtil;
+import jonson.log.ReceivingLog;
+import jonson.net.SocketHandler;
 
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -19,7 +21,7 @@ public class ReceivingServer implements Runnable{
     private final ExecutorService service;
 
     public ReceivingServer() {
-        System.out.println("Start the receiving server.");
+        ReceivingLog.info("Start the receiving server.");
         PORT = PropertiesUtil.getInstance().getPropertyIntValue("ReceivingPort", 10000);
         THREAD_NUMBER = PropertiesUtil.getInstance().getPropertyIntValue("ReceivingServerThreadNumber", 10);
         service = Executors.newFixedThreadPool(THREAD_NUMBER);
@@ -27,21 +29,23 @@ public class ReceivingServer implements Runnable{
 
     @Override
     public void run() {
-        System.out.println("Receiving server has been started.");
+        ReceivingLog.info("Receiving server has been started.");
         try (ServerSocket sc = new ServerSocket(PORT)){
             while (true) {
+
                 // 接続を待ち受け続ける
                 Socket socket = sc.accept();
+
                 // 接続が合った場合はスレッド切り出し
-                service.execute(new ReceivingServerThread(socket));
+                SocketHandler socketHandler = new SocketHandler(socket);
+                service.execute(new ReceivingServerThread(socketHandler));
             }
         } catch (Exception e) {
-            System.out.println("Problem has occurred in receiving server.");
-            e.printStackTrace();
+            ReceivingLog.error("Problem has occurred in receiving server.", e);
         } finally {
-            System.out.println("Terminate the receiving server.");
+            ReceivingLog.info("Terminate the receiving server.");
             service.shutdown();
-            System.out.println("Receiving server has been terminated.");
+            ReceivingLog.info("Receiving server has been terminated.");
             Main.countDownLatch.countDown();
         }
     }

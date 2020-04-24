@@ -1,12 +1,11 @@
 package jonson.server.send;
 
-import jonson.json.MessageMapper;
-import jonson.message.Message;
+import jonson.log.SendingLog;
+import jonson.net.SocketHandler;
 import lombok.Getter;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Socket;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * メッセージの購読者
@@ -14,49 +13,60 @@ import java.net.Socket;
  */
 public class Subscriber {
 
-    private final Socket socket;
+    private final SocketHandler socketHandler;
 
     @Getter
+    // 購読するトピック名
     private final String topicName;
 
-    public Subscriber(Socket socket, String topicName) {
-        this.socket = socket;
+    private final CountDownLatch countDownLatch;
+
+    private boolean completed;
+
+    public Subscriber(SocketHandler socketHandler, String topicName, CountDownLatch countDownLatch) {
+        this.socketHandler = socketHandler;
         this.topicName = topicName;
+        this.countDownLatch = countDownLatch;
+        completed = false;
     }
 
     /**
-     * 通知を受信してメッセージを送信する。
-     * @param message メッセージ
+     * 通知を受ける。
+     * @param data 送信するデータ
      */
-    public void onNotify(Message message) {
-        try(DataOutputStream dos = new DataOutputStream(socket.getOutputStream())) {
-            String output = MessageMapper.toJson(message);
+    public synchronized void onNotify(String data) {
+        subscribe(data);
+    }
 
-            System.out.println(output);
+    /**
+     * データを購読する。
+     * @param data　購読するデータ
+     */
+    private void subscribe(String data) {
+        socketHandler.send(data);
+        complete();
+    }
 
-            // JSON送信
-            dos.writeUTF(output);
-            dos.flush();
-
-            socket.close();
+    /**
+     * 購読を完了する。
+     */
+    private void complete() {
+        try {
+            socketHandler.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            SendingLog.error(e.getMessage(), e);
+        }finally {
+            completed = true;
+            // ここまで来たらスレッドの待ち合わせを終了する。
+            countDownLatch.countDown();
         }
     }
 
     /**
-     * 生きているかを返す
+     * 購読が完了しているかを返す。
      * @return boolean
      */
-    public boolean isAlive() {
-        return !isDead();
-    }
-
-    /**
-     * 死んでいるかを返す
-     * @return boolean
-     */
-    public boolean isDead() {
-        return socket.isClosed();
+    public boolean isCompleted() {
+        return completed;
     }
 }
