@@ -1,12 +1,12 @@
 package jonson.server.send;
 
 import jonson.json.MessageMapper;
-import jonson.log.JonsonLog;
 import jonson.message.Message;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * JSONメッセージの送信を行うクラス
@@ -28,18 +28,31 @@ public class Sender {
 
     /**
      * トピックの購読者に通知を送る。
+     * @param topicName 送信対象のトピック名
      * @param message メッセージ
      */
-    public void notifyToSubscriber(String topicName, Message message) {
+    public void notifyToSubscriber(String topicName, Message message) throws Exception{
         try {
             String data = MessageMapper.toJson(message);
-            // 並列送信
-            subscribers.parallelStream()
-                    .filter(s -> !s.isCompleted())
-                    .filter(s -> s.getTopicName().equals(topicName))
-                    .forEach(s -> s.onNotify(data));
+
+            // 購読者を絞り出して送信
+            List<Subscriber> filteredSubscribers =
+                    subscribers.stream()
+                            .filter(s -> !s.isCompleted())
+                            .filter(s -> s.getTopicName().equals(topicName))
+                            .collect(Collectors.toList());
+
+            for (Subscriber filteredSubscriber : filteredSubscribers) {
+                try {
+                    filteredSubscriber.onNotify(data);
+                } catch (Exception e) {
+                    // 購読者内でエラーが発生した場合
+                    filteredSubscriber.onException(e);
+                }
+            }
         } catch (IOException e) {
-            JonsonLog.error(e.getMessage(), e);
+            // JSON形式への変換に失敗した場合
+            throw new Exception(e.getMessage());
         }
     }
 }

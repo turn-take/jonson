@@ -3,7 +3,6 @@ package jonson.server.receive;
 import jonson.Main;
 import jonson.PropertiesUtil;
 import jonson.log.ReceivingLog;
-import jonson.net.SocketHandler;
 
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -37,8 +36,7 @@ public class ReceivingServer implements Runnable{
                 Socket socket = sc.accept();
 
                 // 接続が合った場合はスレッド切り出し
-                SocketHandler socketHandler = new SocketHandler(socket);
-                service.execute(new ReceivingServerThread(socketHandler));
+                service.execute(new ReceivingServerThread(socket));
             }
         } catch (Exception e) {
             ReceivingLog.error("Problem has occurred in receiving server.", e);

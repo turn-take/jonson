@@ -10,10 +10,13 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * メッセージをキャッシュするキュー
  * 外部的にはキューとして利用できるが内部的にはMap
+ * アプリケーション共通で利用するキューのため。
+ * アプリケーションのどこからでもアクセスできるようにするためにシングルトンにしている。
  */
 public class MessageQueue {
     private static final MessageQueue instance = new MessageQueue();
 
+    // 唯一のインスタンス
     public static MessageQueue getInstance() {
         return instance;
     }

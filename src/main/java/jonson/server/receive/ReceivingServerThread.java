@@ -6,7 +6,7 @@ import jonson.log.ReceivingLog;
 import jonson.message.Message;
 import jonson.net.SocketHandler;
 
-import java.io.IOException;
+import java.net.Socket;
 
 /**
  * 受信側サーバーで動くスレッドクラス
@@ -14,16 +14,16 @@ import java.io.IOException;
  */
 class ReceivingServerThread implements Runnable{
 
-    private final SocketHandler socketHandler;
+    private final Socket socket;
 
-    ReceivingServerThread(SocketHandler socketHandler) {
-        this.socketHandler = socketHandler;
+    ReceivingServerThread(Socket socket) {
+        this.socket = socket;
         ReceivingLog.info("connected : "
-                + socketHandler.getRemoteSocketAddress());
+                + socket.getRemoteSocketAddress());
     }
 
     public void run() {
-        try {
+        try (SocketHandler socketHandler = new SocketHandler(socket)){
 
             // メッセージ取得
             Message message = socketHandler.acceptMessage();
@@ -37,15 +37,8 @@ class ReceivingServerThread implements Runnable{
         } catch (Exception e) {
             ReceivingLog.error("Error has occurred!", e);
         } finally {
-            try {
-                if (!socketHandler.isSocketClosed()) {
-                    socketHandler.close();
-                }
-            } catch (IOException e) {
-                // nothing to do
-            }
             ReceivingLog.info("disconnected : "
-                    + socketHandler.getRemoteSocketAddress());
+                    + socket.getRemoteSocketAddress());
         }
     }
 

@@ -1,15 +1,15 @@
 package jonson.server.send;
 
-import jonson.log.SendingLog;
 import jonson.net.SocketHandler;
 import lombok.Getter;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 
 /**
- * メッセージの購読者
- * ソケットと1:1の関係
+ * 購読者クラス
+ * 送信側サーバーで生成される。
  */
 public class Subscriber {
 
@@ -23,7 +23,9 @@ public class Subscriber {
 
     private boolean completed;
 
-    public Subscriber(SocketHandler socketHandler, String topicName, CountDownLatch countDownLatch) {
+    private Exception exception = null;
+
+    Subscriber(SocketHandler socketHandler, String topicName, CountDownLatch countDownLatch) {
         this.socketHandler = socketHandler;
         this.topicName = topicName;
         this.countDownLatch = countDownLatch;
@@ -34,7 +36,7 @@ public class Subscriber {
      * 通知を受ける。
      * @param data 送信するデータ
      */
-    public synchronized void onNotify(String data) {
+    public synchronized void onNotify(String data) throws IOException{
         subscribe(data);
     }
 
@@ -42,7 +44,7 @@ public class Subscriber {
      * データを購読する。
      * @param data　購読するデータ
      */
-    private void subscribe(String data) {
+    private void subscribe(String data) throws IOException {
         socketHandler.send(data);
         complete();
     }
@@ -51,15 +53,9 @@ public class Subscriber {
      * 購読を完了する。
      */
     private void complete() {
-        try {
-            socketHandler.close();
-        } catch (IOException e) {
-            SendingLog.error(e.getMessage(), e);
-        }finally {
-            completed = true;
-            // ここまで来たらスレッドの待ち合わせを終了する。
-            countDownLatch.countDown();
-        }
+        completed = true;
+        // ここまで来たらスレッドの待ち合わせを終了する。
+        countDownLatch.countDown();
     }
 
     /**
@@ -68,5 +64,24 @@ public class Subscriber {
      */
     public boolean isCompleted() {
         return completed;
+    }
+
+    /**
+     * 例外発生時に呼び出す。
+     * 例外をフィールドに設定し、スレッドの待ち合わせを終了する。
+     * @param e 発生した例外
+     */
+    public void onException(Exception e) {
+        this.exception = e;
+        countDownLatch.countDown();
+    }
+
+    /**
+     * 例外を取得する。
+     * 例外を保持していない場合はnullをラップして返す
+     * @return 例外をラップしたOptional
+     */
+    public Optional<Exception> getException() {
+        return Optional.ofNullable(this.exception);
     }
 }

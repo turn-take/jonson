@@ -3,7 +3,6 @@ package jonson.server.send;
 import jonson.Main;
 import jonson.PropertiesUtil;
 import jonson.log.SendingLog;
-import jonson.net.SocketHandler;
 
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -40,8 +39,8 @@ public class SendingServer implements Runnable{
                 Socket socket = sc.accept();
 
                 // 接続が合った場合はスレッド切り出し
-                SocketHandler socketHandler = new SocketHandler(socket);
-                service.execute(new SendingServerThread(socketHandler, sender));
+                service.execute(new SendingServerThread(socket, sender));
+
             }
         } catch (Exception e) {
             SendingLog.error("Problem has occurred in sending server.", e);

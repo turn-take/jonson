@@ -9,7 +9,7 @@ public class InputStreamParser {
      * InputStreamからStringに変換
      * @param is
      * @return 文字列
-     * @throws IOException
+     * @throws IOException 変換中に例外が発生した場合
      */
     public static String parseToString(InputStream is) throws IOException {
         // 入力をバイト配列に格納

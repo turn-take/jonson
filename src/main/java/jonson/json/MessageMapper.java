@@ -16,7 +16,7 @@ public class MessageMapper {
      * Messageオブジェクト　→　JSON文字列
      * @param message
      * @return JSON文字列
-     * @throws IOException
+     * @throws IOException JSON文字列への変換中に例外が発生した場合
      */
     public static String toJson(Message message) throws IOException {
         try {

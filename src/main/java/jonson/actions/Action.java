@@ -11,26 +11,12 @@ import java.io.IOException;
 public abstract class Action {
 
     /**
-     * サブクラスのアクションを実行した後、ソケットをクローズするテンプレートメソッド
+     * サブクラスのアクションを実行するテンプレートメソッド
      * @param socketHandler
      */
-    public void execute(SocketHandler socketHandler) {
-        try {
-            executeSub(socketHandler);
-            close(socketHandler);
-        } catch (Exception e) {
-            JonsonLog.error(e.getMessage(),e);
-        }
+    public void execute(SocketHandler socketHandler) throws Exception{
+        executeSub(socketHandler);
     }
 
     protected abstract void executeSub(SocketHandler socketHandler) throws Exception;
-
-    /**
-     * ソケットをクローズする。
-     * @param socketHandler
-     * @throws IOException
-     */
-    private void close(SocketHandler socketHandler) throws IOException {
-        socketHandler.close();
-    };
 }

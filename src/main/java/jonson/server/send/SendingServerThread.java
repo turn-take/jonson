@@ -4,7 +4,8 @@ import jonson.io.InputStreamParser;
 import jonson.log.SendingLog;
 import jonson.net.SocketHandler;
 
-import java.io.*;
+import java.net.Socket;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -12,20 +13,20 @@ import java.util.concurrent.CountDownLatch;
  * ソケットからトピックの購読者を作成し、購読完了までスレッドを待機させる。
  */
 class SendingServerThread implements Runnable{
-    private final SocketHandler socketHandler;
+    private final Socket socket;
     private final Sender sender;
 
     private final CountDownLatch countDownLatch = new CountDownLatch(1);
 
-    SendingServerThread(SocketHandler socketHandler, Sender sender) {
-        this.socketHandler = socketHandler;
+    SendingServerThread(Socket socket, Sender sender) {
+        this.socket = socket;
         this.sender = sender;
         SendingLog.info("connected : "
-                + socketHandler.getRemoteSocketAddress());
+                + socket.getRemoteSocketAddress());
     }
 
     public void run() {
-        try {
+        try (SocketHandler socketHandler = new SocketHandler(socket)){
 
             String topicName = InputStreamParser.parseToString(socketHandler.getInputStream());
 
@@ -43,18 +44,27 @@ class SendingServerThread implements Runnable{
             // 購読者を削除
             sender.remove(subscriber);
 
+            // 例外ハンドリング
+            handleException(subscriber);
+
         } catch (Exception e) {
             SendingLog.error(e.getMessage() , e);
         } finally {
-            try {
-                if (!socketHandler.isSocketClosed()) {
-                    socketHandler.close();
-                }
-            } catch (IOException e) {
-                SendingLog.error(e.getMessage(),e);
-            }
             SendingLog.info("disconnected : "
-                    + socketHandler.getRemoteSocketAddress());
+                    + socket.getRemoteSocketAddress());
+        }
+    }
+
+    /**
+     * 例外のハンドリングを行う。
+     * 引数の購読者が例外を保持している場合は例外をスローする。保持していない場合は何もしない。
+     * @param subscriber 購読者
+     * @throws Exception 購読者が例外を保持している場合
+     */
+    private void handleException(Subscriber subscriber) throws Exception{
+        Optional<Exception> optionalException = subscriber.getException();
+        if(optionalException.isPresent()) {
+            throw optionalException.get();
         }
     }
 }
