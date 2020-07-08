@@ -1,5 +1,3 @@
 #jonson
 
-"jonson" is a simple socket server.
-
-Receives a java object and sends it asynchronously in JSON format.
+Javaのオブジェクト形式のメッセージを受信し、Json形式でプッシュ送信するメッセージキューサーバー的なの
